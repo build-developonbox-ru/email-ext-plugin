@@ -5,6 +5,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.emailext.plugins.EmailToken;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
+import hudson.tasks.test.TestResult;
 import java.io.IOException;
 import org.jenkinsci.plugins.tokenmacro.DataBoundTokenMacro;
 import org.jenkinsci.plugins.tokenmacro.MacroEvaluationException;
@@ -67,7 +68,8 @@ public class FailedTestsContent extends DataBoundTokenMacro {
             if (maxTests > 0) {
                 int printedTests = 0;
                 int printedLength = 0;
-                for (CaseResult failedTest : testResult.getFailedTests()) {
+                for (TestResult testRes : testResult.getFailedTests()) {
+                    CaseResult failedTest = (CaseResult)testRes;
                     if (showOldFailures || failedTest.getAge() == 1) {
                         if (printedTests < maxTests && printedLength <= maxLength) {
                             printedLength += outputTest(buffer, failedTest, showStack, showMessage, maxLength-printedLength);
