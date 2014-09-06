@@ -5,6 +5,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.emailext.plugins.EmailToken;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
+import hudson.tasks.test.TestResult;
 import java.io.IOException;
 
 import hudson.tasks.test.TestResult;
