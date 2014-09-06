@@ -123,30 +123,44 @@ public class AttachmentUtils implements Serializable {
         } else if (!StringUtils.isBlank(attachmentsPattern)) {
             attachments = new ArrayList<MimeBodyPart>();
 
-            FilePath[] files = ws.list(ContentBuilder.transformText(attachmentsPattern, context, null));
+            String expandedAttachmentsString = ContentBuilder.transformText(attachmentsPattern, context, null);
+            String[] expandedAttachmentsStringPatterns = expandedAttachmentsString.split(",");
 
-            for (FilePath file : files) {
-                if (maxAttachmentSize > 0
-                        && (totalAttachmentSize + file.length()) >= maxAttachmentSize) {
-                    context.getListener().getLogger().println("Skipping `" + file.getName()
-                            + "' (" + file.length()
-                            + " bytes) - too large for maximum attachments size");
+            for (String expandedAttachmentPattern : expandedAttachmentsStringPatterns) {
+                if (StringUtils.isBlank(expandedAttachmentPattern)) {
                     continue;
                 }
+                FilePath[] files = ws.list(expandedAttachmentPattern);
 
-                MimeBodyPart attachmentPart = new MimeBodyPart();
-                FilePathDataSource fileDataSource = new FilePathDataSource(file);
+                if (files.length == 0) {
+                    context.getListener().getLogger().println("No file(s) found to attach for " + expandedAttachmentPattern);
+                } else {
+                    for (FilePath file : files) {
+                        if (maxAttachmentSize > 0
+                                && (totalAttachmentSize + file.length()) >= maxAttachmentSize) {
+                            context.getListener().getLogger().println("Skipping `" + file.getName()
+                                    + "' (" + file.length()
+                                    + " bytes) - too large for maximum attachments size");
+                            continue;
+                        }
 
-                try {
-                    attachmentPart.setDataHandler(new DataHandler(fileDataSource));
-                    attachmentPart.setFileName(file.getName());
-                    attachmentPart.setContentID(String.format("<%s>", file.getName()));
-                    attachments.add(attachmentPart);
-                    totalAttachmentSize += file.length();
-                } catch (MessagingException e) {
-                    context.getListener().getLogger().println("Error adding `"
-                            + file.getName() + "' as attachment - "
-                            + e.getMessage());
+                        MimeBodyPart attachmentPart = new MimeBodyPart();
+                        FilePathDataSource fileDataSource = new FilePathDataSource(file);
+
+                        try {
+                            attachmentPart.setDataHandler(new DataHandler(fileDataSource));
+                            attachmentPart.setFileName(file.getName());
+                            attachmentPart.setContentID(String.format("<%s>", file.getName()));
+                            attachments.add(attachmentPart);
+                            totalAttachmentSize += file.length();
+                        } catch (MessagingException e) {
+                            context.getListener().getLogger().println("Error adding `"
+                                    + file.getName() + "' as attachment - "
+                                    + e.getMessage());
+                            continue;
+                        }
+                        context.getListener().getLogger().println("File " + file + " was attached");
+                    }
                 }
             }
         }
